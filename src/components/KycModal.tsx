@@ -10,8 +10,6 @@ import {
   ArrowRight, 
   ArrowLeft, 
   Sparkles, 
-  Lock, 
-  AlertCircle, 
   Upload, 
   RefreshCw, 
   QrCode, 
@@ -155,8 +153,8 @@ export const KycModal: React.FC<KycModalProps> = ({
         spread: 75,
         origin: { y: 0.6 }
       });
-    } catch (e) {
-      // fallback
+    } catch {
+      // fallback if canvas-confetti is not supported
     }
 
     onKycComplete(updatedData);
@@ -206,7 +204,7 @@ export const KycModal: React.FC<KycModalProps> = ({
                 { s: 3, label: 'AI OCR Scan', icon: FileText, done: ocrCompleted },
                 { s: 4, label: 'Live Selfie', icon: Camera, done: selfieCaptured },
               ].map((item) => {
-                const Icon = item.icon;
+                const StepIcon = item.icon;
                 const isActive = step === item.s;
                 const isCompleted = item.done;
 
@@ -231,7 +229,7 @@ export const KycModal: React.FC<KycModalProps> = ({
                         ? 'bg-teal-600 text-white' 
                         : 'bg-slate-200 text-slate-600'
                     }`}>
-                      {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : item.s}
+                      {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <StepIcon className="w-3 h-3" />}
                     </div>
                     <span className="text-[11px] font-bold hidden sm:inline truncate">
                       {item.label}
@@ -504,17 +502,27 @@ export const KycModal: React.FC<KycModalProps> = ({
                 </div>
 
                 {/* Upload Zone */}
-                <div className="border-2 border-dashed border-slate-200 hover:border-teal-400 rounded-2xl p-6 text-center bg-slate-50/50 transition-colors">
+                <label className="border-2 border-dashed border-slate-200 hover:border-teal-400 rounded-2xl p-6 text-center bg-slate-50/50 transition-colors block cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg,.xml"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setFileName(e.target.files[0].name);
+                      }
+                    }}
+                  />
                   <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center mx-auto mb-3">
                     <Upload className="w-6 h-6" />
                   </div>
                   <h4 className="text-xs font-bold text-navy-900">
-                    Uploaded File: <span className="text-teal-700">{fileName}</span>
+                    Uploaded Document: <span className="text-teal-700">{fileName}</span>
                   </h4>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Supports PDF, PNG, JPG or DigiLocker XML (Max 15MB)
+                    Click to browse or drop file (Supports PDF, PNG, JPG, or DigiLocker XML)
                   </p>
-                </div>
+                </label>
 
                 {!ocrCompleted ? (
                   <button

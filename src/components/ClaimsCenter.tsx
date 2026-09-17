@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  FileCheck, 
   Search, 
   UploadCloud, 
   Clock, 
@@ -9,10 +8,7 @@ import {
   PhoneCall, 
   FileText, 
   Check, 
-  Building, 
-  ShieldAlert,
-  ArrowRight,
-  Sparkles
+  ArrowRight
 } from 'lucide-react';
 import { MOCK_CLAIMS } from '../data/mockData';
 import { ClaimRecord } from '../types/insurance';
@@ -231,7 +227,6 @@ export const ClaimsCenter: React.FC = () => {
                     {workflowSteps.map((stepItem) => {
                       const isPast = stepItem.number < currentClaim.currentStep;
                       const isCurrent = stepItem.number === currentClaim.currentStep;
-                      const isFuture = stepItem.number > currentClaim.currentStep;
 
                       return (
                         <div key={stepItem.number} className="flex sm:flex-col items-center sm:text-center space-x-3 sm:space-x-0">

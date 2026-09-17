@@ -27,7 +27,7 @@ export function App() {
     try {
       const saved = localStorage.getItem('coverflow_user');
       if (saved) return JSON.parse(saved);
-    } catch (e) {
+    } catch {
       // fallback
     }
     return DEMO_USERS.rohan;

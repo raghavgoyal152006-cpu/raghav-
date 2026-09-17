@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, 
-  Smartphone, 
-  Mail, 
-  Lock, 
   ArrowRight, 
   CheckCircle2, 
   ShieldCheck, 
@@ -16,7 +13,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { UserProfile, UserRole } from '../types/insurance';
+import { UserProfile } from '../types/insurance';
 import { DEMO_USERS } from '../data/mockData';
 
 interface AuthModalProps {

@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
 import { 
-  Shield, 
   Car, 
   Home, 
   Heart, 
   Users, 
-  Plane, 
   Briefcase, 
   Smartphone, 
   ArrowRight, 
-  CheckCircle2, 
-  HelpCircle, 
-  Sparkles, 
-  Cpu, 
   Receipt, 
   Timer, 
   Headphones,
-  SlidersHorizontal,
   ChevronDown,
   Info,
-  ExternalLink
+  ExternalLink,
+  Cpu
 } from 'lucide-react';
 import { COMPARISON_DATA } from '../data/mockData';
 import { ProductType, PlanTier } from '../types/insurance';
@@ -33,7 +27,6 @@ export const Hero: React.FC<HeroProps> = ({ onStartQuote, onSelectPlan }) => {
   const [pinCode, setPinCode] = useState('560001');
   const [selectedProduct, setSelectedProduct] = useState<ProductType>('health');
   const [showTooltip, setShowTooltip] = useState(true);
-  const [activeEcosystemNode, setActiveEcosystemNode] = useState<ProductType>('health');
 
   const currentComparison = COMPARISON_DATA[selectedProduct] || COMPARISON_DATA.health;
 
@@ -41,15 +34,6 @@ export const Hero: React.FC<HeroProps> = ({ onStartQuote, onSelectPlan }) => {
     e.preventDefault();
     onStartQuote(selectedProduct, pinCode);
   };
-
-  const ecosystemNodes = [
-    { id: 'auto' as ProductType, label: 'Auto Insurance', icon: Car, cx: 350, cy: 90 },
-    { id: 'home' as ProductType, label: 'Home Insurance', icon: Home, cx: 480, cy: 80 },
-    { id: 'health' as ProductType, label: 'Health Insurance', icon: Heart, cx: 300, cy: 260 },
-    { id: 'life' as ProductType, label: 'Life Insurance', icon: Users, cx: 520, cy: 250 },
-    { id: 'business' as ProductType, label: 'Commercial & Cyber', icon: Briefcase, cx: 310, cy: 370 },
-    { id: 'device' as ProductType, label: 'Smart Device', icon: Smartphone, cx: 490, cy: 360 },
-  ];
 
   return (
     <section className="relative overflow-hidden bg-hero-mesh pt-8 pb-16 lg:pt-14 lg:pb-24 border-b border-slate-100">
@@ -145,7 +129,6 @@ export const Hero: React.FC<HeroProps> = ({ onStartQuote, onSelectPlan }) => {
                     type="button"
                     onClick={() => {
                       setSelectedProduct(item.id as ProductType);
-                      setActiveEcosystemNode(item.id as ProductType);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       selectedProduct === item.id

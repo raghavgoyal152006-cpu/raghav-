@@ -218,6 +218,83 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ onSelectPlan, onOpenFi
           })}
         </div>
 
+        {/* Gadget Shield Diagnostic & Compatibility Banner (Visible when Gadget Shield tab is active) */}
+        {activeTab === 'device' && (
+          <div className="my-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-navy-900 via-slate-900 to-teal-950 text-white border border-teal-500/30 shadow-floating space-y-6 animate-in fade-in">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div className="space-y-1">
+                <div className="inline-flex items-center space-x-1.5 text-teal-400 text-xs font-bold uppercase tracking-wider">
+                  <Smartphone className="w-4 h-4" />
+                  <span>CoverFlow AI Hardware Diagnostic Suite</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold font-display text-white">
+                  Instant Paperless Device Health Assessment
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Zero manual inspections. Our automated sensor diagnostic verifies device condition in 30 seconds.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onOpenFinder('device')}
+                className="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-navy-950 font-bold text-xs uppercase tracking-wider whitespace-nowrap shadow-md transition-all active:scale-[0.99]"
+              >
+                Protect My Device Now
+              </button>
+            </div>
+
+            {/* 4 Diagnostic Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">Touch Display Matrix</span>
+                <div className="text-emerald-400 font-bold flex items-center space-x-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>100% Pixels Operational</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Zero dead pixels detected</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">Liquid Sensor Strip</span>
+                <div className="text-emerald-400 font-bold flex items-center space-x-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Dry & Uncompromised</span>
+                </div>
+                <p className="text-[10px] text-slate-400">No internal moisture alert</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">Battery & Logic Board</span>
+                <div className="text-teal-300 font-bold flex items-center space-x-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>96% Peak Capacity</span>
+                </div>
+                <p className="text-[10px] text-slate-400">OEM genuine components</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <span className="text-[10px] text-slate-400 uppercase font-bold">IMEI & Theft Register</span>
+                <div className="text-emerald-400 font-bold flex items-center space-x-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>CEIR Database Clear</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Clean title verified</p>
+              </div>
+            </div>
+
+            {/* Supported Flagship Devices */}
+            <div className="pt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-300">
+              <span className="text-slate-400 font-semibold">Supported Ecosystems:</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">Apple iPhone 16 / 15 Series</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">MacBook Pro & Air M3</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">Samsung Galaxy S25 / Z Fold 6</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">iPad Pro & Tablets</span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">Apple Watch Ultra 2</span>
+            </div>
+          </div>
+        )}
+
         {/* Bottom Banner */}
         <div className="mt-14 p-6 rounded-2xl bg-gradient-to-r from-teal-50 via-cyan-50 to-blue-50 border border-teal-200/70 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
