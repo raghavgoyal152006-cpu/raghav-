@@ -17,9 +17,11 @@ import {
   ExternalLink,
   CheckCircle2
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+interface EmbeddedInsuranceProps {
+  onTriggerPayment?: (payload: { title: string; subtitle: string; amount: number; onPaymentSuccess: () => void }) => void;
+}
 
-export const EmbeddedInsurance: React.FC = () => {
+export const EmbeddedInsurance: React.FC<EmbeddedInsuranceProps> = ({ onTriggerPayment }) => {
   const [activeScenario, setActiveScenario] = useState<'ecommerce' | 'flight' | 'gadget' | 'fintech'>('ecommerce');
   const [isInsuranceAttached, setIsInsuranceAttached] = useState<boolean>(true);
   const [activeCodeTab, setActiveCodeTab] = useState<'react' | 'curl' | 'node' | 'webhook'>('react');
@@ -155,16 +157,22 @@ async function onCheckoutConfirmed(order) {
   };
 
   const handleCompletePurchase = () => {
-    setPurchaseCompleted(true);
-    try {
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 }
+    if (onTriggerPayment) {
+      onTriggerPayment({
+        title: `${current.merchant}: ${current.itemTitle}`,
+        subtitle: isInsuranceAttached 
+          ? `Includes CoverFlow ${current.addonTitle} (+${current.currency}${current.addonPrice})` 
+          : 'Standard Checkout (Without CoverFlow Protection)',
+        amount: totalPrice,
+        onPaymentSuccess: () => {
+          setPurchaseCompleted(true);
+          setWebhookLog(`[${new Date().toLocaleTimeString()}] HTTP 200: Event 'policy.bound' sent to merchant webhook URL`);
+        }
       });
-    } catch {
-      // fallback
+      return;
     }
+
+    setPurchaseCompleted(true);
     setWebhookLog(`[${new Date().toLocaleTimeString()}] HTTP 200: Event 'policy.bound' sent to merchant webhook URL`);
   };
 

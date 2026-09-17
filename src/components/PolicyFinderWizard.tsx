@@ -17,7 +17,13 @@ import {
   Watch, 
   CheckCircle2, 
   RefreshCw,
-  Download
+  Download,
+  CreditCard,
+  Building2,
+  Zap,
+  QrCode,
+  Lock,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ProductType, PlanTier, UserProfile } from '../types/insurance';
@@ -69,6 +75,15 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
   const [wizardPan, setWizardPan] = useState(currentUser?.kycData?.panNumber || 'ABCPS1234F');
   const [wizardAadhaar, setWizardAadhaar] = useState('5421 8890 8912');
   const [kycVerifying, setKycVerifying] = useState(false);
+
+  // Step 7 Payment Gateway State
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
+  const [selectedUpiApp, setSelectedUpiApp] = useState<'gpay' | 'phonepe' | 'paytm'>('gpay');
+  const [testCardNumber] = useState('4111 8901 2345 6789');
+  const [testCardExpiry] = useState('08/29');
+  const [testCardCvv] = useState('782');
+  const [isPaying, setIsPaying] = useState(false);
+  const [payStage, setPayStage] = useState('');
 
   if (!isOpen) return null;
 
@@ -122,7 +137,7 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
   const handleBuyPlan = (plan: PlanTier) => {
     setSelectedPlan(plan);
     if (currentUser?.kycStatus === 'verified') {
-      executePolicyIssuance(plan);
+      setStep(7); // Proceed to Free Payment Gateway
     } else {
       setStep(6); // Step 6 IRDAI KYC
     }
@@ -150,9 +165,22 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
         });
       }
       if (selectedPlan) {
-        executePolicyIssuance(selectedPlan);
+        setStep(7); // Proceed to Free Payment Gateway
       }
-    }, 1000);
+    }, 900);
+  };
+
+  const handleAuthorizePaymentAndIssue = () => {
+    if (!selectedPlan) return;
+    setIsPaying(true);
+    setPayStage('Connecting to IRDAI Free Payment Gateway Switch...');
+    setTimeout(() => {
+      setPayStage('Authorizing Sandbox Zero-Surcharge Transaction...');
+    }, 500);
+    setTimeout(() => {
+      setIsPaying(false);
+      executePolicyIssuance(selectedPlan);
+    }, 1200);
   };
 
   const toggleBeneficiary = (item: string) => {
@@ -186,13 +214,14 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
                 Interactive Policy Finder Wizard
               </h3>
               <p className="text-[11px] text-slate-500">
-                Step {step > 5 ? 5 : step} of 5 — {
+                Step {step} of 7 — {
                   step === 1 ? 'Protection Domain' :
                   step === 2 ? (selectedCategory === 'device' ? 'Select Gadget' : selectedCategory === 'auto' ? 'Vehicle Details' : 'Members / Nominees') :
                   step === 3 ? 'Coverage Level' :
                   step === 4 ? 'Budget & Add-ons' :
                   step === 5 ? 'Curated Plan Comparison' :
-                  'IRDAI e-KYC Verification'
+                  step === 6 ? 'IRDAI e-KYC Verification' :
+                  'Free Payment Gateway'
                 }
               </p>
             </div>
@@ -210,7 +239,7 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
         <div className="w-full bg-slate-100 h-1.5">
           <div
             className="bg-gradient-to-r from-teal-500 to-emerald-500 h-1.5 transition-all duration-300"
-            style={{ width: `${(Math.min(step, 5) / 5) * 100}%` }}
+            style={{ width: `${(Math.min(step, 7) / 7) * 100}%` }}
           />
         </div>
 
@@ -695,16 +724,173 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
                   {kycVerifying ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Authenticating with CKYC Registry & Issuing Policy...</span>
+                      <span>Authenticating with CKYC Registry...</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-4 h-4" />
-                      <span>Verify e-KYC & Issue Policy Certificate</span>
+                      <span>Verify e-KYC & Proceed to Payment Gateway</span>
                     </>
                   )}
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* STEP 7: FREE PAYMENT GATEWAY */}
+          {step === 7 && !isCompleted && selectedPlan && (
+            <div className="space-y-4 animate-in fade-in">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-navy-900 to-teal-950 text-white flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">
+                      Coverflow Pay
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-extrabold border border-emerald-500/30">
+                      100% Free Sandbox Gateway
+                    </span>
+                  </div>
+                  <h4 className="text-base font-bold font-display mt-0.5">
+                    Pay Premium for {selectedPlan.name}
+                  </h4>
+                  <p className="text-xs text-slate-300">
+                    IRDAI Zero Surcharge • Instant Cashless Binding • No Real Money Charged
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-teal-400 font-display">
+                    ₹{selectedPlan.premiumMonthly}
+                  </div>
+                  <span className="text-[10px] text-slate-400">per month (incl. 18% GST)</span>
+                </div>
+              </div>
+
+              {/* Payment Methods */}
+              <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-2xl text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('upi')}
+                  className={`py-2 px-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+                    paymentMethod === 'upi' ? 'bg-white text-navy-900 shadow-xs' : 'text-slate-600 hover:text-navy-900'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>UPI 1-Click</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={`py-2 px-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+                    paymentMethod === 'card' ? 'bg-white text-navy-900 shadow-xs' : 'text-slate-600 hover:text-navy-900'
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Test Cards</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('netbanking')}
+                  className={`py-2 px-2 rounded-xl flex items-center justify-center space-x-1.5 transition-all ${
+                    paymentMethod === 'netbanking' ? 'bg-white text-navy-900 shadow-xs' : 'text-slate-600 hover:text-navy-900'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>NetBanking</span>
+                </button>
+              </div>
+
+              {/* Payment Sub-view */}
+              {paymentMethod === 'upi' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Select Mock UPI App</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'gpay', label: 'GPay', icon: '🟢' },
+                        { id: 'phonepe', label: 'PhonePe', icon: '🟣' },
+                        { id: 'paytm', label: 'Paytm', icon: '🔵' },
+                      ].map((app) => (
+                        <button
+                          key={app.id}
+                          type="button"
+                          onClick={() => setSelectedUpiApp(app.id as any)}
+                          className={`p-2 rounded-xl border text-center text-xs transition-all ${
+                            selectedUpiApp === app.id
+                              ? 'bg-white border-teal-500 ring-2 ring-teal-500/20 font-bold text-navy-900 shadow-xs'
+                              : 'bg-white/80 border-slate-200 text-slate-600'
+                          }`}
+                        >
+                          <div className="text-base">{app.icon}</div>
+                          <div className="text-[11px] mt-0.5">{app.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-[11px] text-slate-500 pt-1">
+                      UPI VPA: <strong className="font-mono text-navy-900">rohan@{selectedUpiApp}</strong>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="text-xs font-bold text-navy-900">Scan & Pay Simulator</div>
+                      <div className="text-[10px] text-slate-500">BHIM / Any UPI QR</div>
+                      <div className="text-[10px] text-emerald-600 font-bold">● Free Sandbox Ready</div>
+                    </div>
+                    <QrCode className="w-12 h-12 text-slate-700" />
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === 'card' && (
+                <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase text-slate-400">Auto-filled RuPay Test Card</span>
+                    <span className="text-[10px] text-emerald-600 font-bold">Zero Surcharge</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-navy-900 text-white font-mono space-y-2">
+                    <div className="text-[10px] text-teal-400 font-bold flex justify-between">
+                      <span>SANDBOX TEST CARD</span>
+                      <span>RUPAY</span>
+                    </div>
+                    <div className="text-sm tracking-widest">{testCardNumber}</div>
+                    <div className="flex justify-between text-[10px] text-slate-400">
+                      <span>{currentUser?.name || 'ROHAN SHARMA'}</span>
+                      <span>{testCardExpiry} • CVV {testCardCvv}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === 'netbanking' && (
+                <div className="grid grid-cols-3 gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                  {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National'].map((bank) => (
+                    <div key={bank} className="p-2.5 rounded-xl bg-white border border-slate-200 font-bold text-navy-900 text-center">
+                      <div className="text-[11px]">{bank}</div>
+                      <div className="text-[9px] text-emerald-600 font-normal">Direct Switch</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Authorize Button */}
+              <button
+                type="button"
+                onClick={handleAuthorizePaymentAndIssue}
+                disabled={isPaying}
+                className="w-full py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-teal-600/20 flex items-center justify-center space-x-2 transition-all active:scale-[0.99] disabled:opacity-50"
+              >
+                {isPaying ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{payStage || 'Authorizing Sandbox Payment...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    <span>Authorize ₹{selectedPlan.premiumMonthly} (Free Sandbox) & Issue Policy</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
 

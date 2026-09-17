@@ -24,12 +24,14 @@ interface MyAccountDashboardProps {
   onViewCertificate: (policy: Policy) => void;
   currentUser?: UserProfile | null;
   onOpenKyc?: () => void;
+  onTriggerPayment?: (policy: Policy, onDone: () => void) => void;
 }
 
 export const MyAccountDashboard: React.FC<MyAccountDashboardProps> = ({
   onViewCertificate,
   currentUser,
   onOpenKyc,
+  onTriggerPayment,
 }) => {
   const [activeTab, setActiveTab] = useState<'policies' | 'claims' | 'renewals' | 'documents'>('policies');
   const [policies, setPolicies] = useState<Policy[]>(MOCK_USER_POLICIES);
@@ -42,14 +44,23 @@ export const MyAccountDashboard: React.FC<MyAccountDashboardProps> = ({
   const isKycVerified = currentUser?.kycStatus === 'verified';
 
   const handleQuickRenew = (policyId: string) => {
-    setPolicies(policies.map((p) => {
-      if (p.id === policyId) {
-        return { ...p, status: 'renewed', expiryDate: '19 Sep 2027' };
-      }
-      return p;
-    }));
-    setRenewedId(policyId);
-    setTimeout(() => setRenewedId(null), 4000);
+    const target = policies.find((p) => p.id === policyId);
+    const applyRenewalState = () => {
+      setPolicies(prev => prev.map((p) => {
+        if (p.id === policyId) {
+          return { ...p, status: 'renewed', expiryDate: '19 Sep 2027' };
+        }
+        return p;
+      }));
+      setRenewedId(policyId);
+      setTimeout(() => setRenewedId(null), 5000);
+    };
+
+    if (target && onTriggerPayment) {
+      onTriggerPayment(target, applyRenewalState);
+    } else {
+      applyRenewalState();
+    }
   };
 
   return (

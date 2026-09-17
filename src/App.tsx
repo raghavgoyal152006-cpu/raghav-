@@ -18,6 +18,7 @@ import { AuthModal } from './components/AuthModal';
 import { KycModal } from './components/KycModal';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { ResourcesModal } from './components/ResourcesModal';
+import { FreePaymentGatewayModal, PaymentPayload, PaymentReceipt } from './components/FreePaymentGatewayModal';
 import { UserRole, ProductType, PlanTier, Policy, UserProfile, KycData } from './types/insurance';
 import { DEMO_USERS } from './data/mockData';
 
@@ -46,6 +47,10 @@ export function App() {
   const [isKycModalOpen, setIsKycModalOpen] = useState<boolean>(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [isResourcesModalOpen, setIsResourcesModalOpen] = useState<boolean>(false);
+
+  // Free Payment Gateway State
+  const [paymentPayload, setPaymentPayload] = useState<PaymentPayload | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
 
   // Toast notifications
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -149,6 +154,30 @@ export function App() {
     triggerToast(`Policy ${newPolicy.policyNumber} issued successfully! Certificate ready.`);
   };
 
+  const handleTriggerPayment = (
+    payload: Omit<PaymentPayload, 'onPaymentSuccess'>,
+    onSuccessCallback?: (receipt: PaymentReceipt) => void
+  ) => {
+    setPaymentPayload({
+      ...payload,
+      onPaymentSuccess: (receipt) => {
+        triggerToast(`Payment authorized! Transaction ID: ${receipt.transactionId}`);
+        if (onSuccessCallback) onSuccessCallback(receipt);
+      },
+    });
+    setIsPaymentModalOpen(true);
+  };
+
+  const handleOpenPaymentDemo = () => {
+    handleTriggerPayment({
+      title: 'Term Life Cover ₹1 Crore (Annual Plan)',
+      subtitle: 'HDFC Life Click 2 Protect 3D Plus • Zero Gateway Surcharge',
+      amount: 5880,
+      policyNumber: 'CF-LIFE-2026-DEMO',
+      category: 'life',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col selection:bg-teal-500 selection:text-white font-sans">
       
@@ -180,6 +209,7 @@ export function App() {
         onOpenKyc={() => setIsKycModalOpen(true)}
         onOpenSearch={() => setIsSearchModalOpen(true)}
         onOpenResources={() => setIsResourcesModalOpen(true)}
+        onOpenPaymentDemo={handleOpenPaymentDemo}
       />
 
       {/* Main View Body */}
@@ -216,6 +246,15 @@ export function App() {
               onViewCertificate={(pol) => setSelectedCertificate(pol)}
               currentUser={currentUser}
               onOpenKyc={() => setIsKycModalOpen(true)}
+              onTriggerPayment={(pol, onDone) => {
+                handleTriggerPayment({
+                  title: `${pol.title} (Annual Renewal)`,
+                  subtitle: `Policy: ${pol.policyNumber} • 5% NCB Discount Applied`,
+                  amount: 6800,
+                  policyNumber: pol.policyNumber,
+                  category: pol.type,
+                }, () => onDone());
+              }}
             />
           </div>
         ) : (
@@ -248,7 +287,15 @@ export function App() {
             <ClaimsCenter />
 
             {/* 7. Embedded Insurance Sandbox */}
-            <EmbeddedInsurance />
+            <EmbeddedInsurance 
+              onTriggerPayment={({ title, subtitle, amount, onPaymentSuccess }) => {
+                handleTriggerPayment({
+                  title,
+                  subtitle,
+                  amount,
+                }, () => onPaymentSuccess());
+              }}
+            />
 
             {/* 8. Trust, Security & Compliance */}
             <TrustAndCompliance />
@@ -310,6 +357,13 @@ export function App() {
         isOpen={isResourcesModalOpen}
         onClose={() => setIsResourcesModalOpen(false)}
         onOpenKyc={() => setIsKycModalOpen(true)}
+      />
+
+      {/* Free IRDAI Compliant Payment Gateway Modal (UPI FastPay, Test Cards, NetBanking, 0% EMI) */}
+      <FreePaymentGatewayModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        payload={paymentPayload}
       />
 
     </div>

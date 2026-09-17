@@ -36,6 +36,7 @@ interface HeaderProps {
   onOpenKyc: () => void;
   onOpenSearch: () => void;
   onOpenResources: () => void;
+  onOpenPaymentDemo?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -51,6 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenKyc,
   onOpenSearch,
   onOpenResources,
+  onOpenPaymentDemo,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -137,6 +139,19 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Actions: Search, Notifications, Role Switcher, KYC Badge, & Account / Login */}
           <div className="hidden sm:flex items-center space-x-3">
             
+            {/* Quick Free Pay Sandbox Trigger */}
+            {onOpenPaymentDemo && (
+              <button
+                onClick={onOpenPaymentDemo}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-teal-200/80 bg-teal-50/80 hover:bg-teal-100 text-teal-800 text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-[0.98]"
+                title="Launch CoverFlow Free Sandbox Payment Gateway"
+              >
+                <Zap className="w-3.5 h-3.5 text-teal-600 fill-teal-600" />
+                <span className="hidden lg:inline">Free Pay Gateway</span>
+                <span className="lg:hidden">Pay</span>
+              </button>
+            )}
+
             {/* Quick Search Shortcut Button */}
             <button
               onClick={onOpenSearch}
@@ -438,6 +453,17 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 80D Tax Calculator
               </button>
+              {onOpenPaymentDemo && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenPaymentDemo();
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 text-center"
+                >
+                  ⚡ Free Pay
+                </button>
+              )}
             </div>
 
             {navLinks.map((link) => (
