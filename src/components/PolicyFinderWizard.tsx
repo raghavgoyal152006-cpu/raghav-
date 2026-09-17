@@ -18,7 +18,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { ProductType, PlanTier } from '../types/insurance';
+import { ProductType, PlanTier, UserProfile } from '../types/insurance';
 import { COMPARISON_DATA } from '../data/mockData';
 
 interface PolicyFinderWizardProps {
@@ -27,6 +27,8 @@ interface PolicyFinderWizardProps {
   initialCategory?: ProductType;
   onPolicyIssued?: (newPolicy: any) => void;
   onViewCertificate?: (policy: any) => void;
+  currentUser?: UserProfile | null;
+  onKycVerified?: (data: any) => void;
 }
 
 export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
@@ -35,6 +37,8 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
   initialCategory = 'health',
   onPolicyIssued,
   onViewCertificate,
+  currentUser,
+  onKycVerified,
 }) => {
   const [step, setStep] = useState<number>(1);
   const [selectedCategory, setSelectedCategory] = useState<ProductType>(initialCategory);
@@ -45,6 +49,11 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [issuedPolicyData, setIssuedPolicyData] = useState<any>(null);
+
+  // Wizard KYC State
+  const [wizardPan, setWizardPan] = useState(currentUser?.kycData?.panNumber || 'ABCPS1234F');
+  const [wizardAadhaar, setWizardAadhaar] = useState('5421 8890 8912');
+  const [kycVerifying, setKycVerifying] = useState(false);
 
   if (!isOpen) return null;
 
@@ -58,8 +67,7 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
     if (step > 1) setStep(step - 1);
   };
 
-  const handleBuyPlan = (plan: PlanTier) => {
-    setSelectedPlan(plan);
+  const executePolicyIssuance = (plan: PlanTier) => {
     const newPolicy = {
       id: `POL-${Math.floor(10000 + Math.random() * 90000)}`,
       policyNumber: `CF-${selectedCategory.toUpperCase()}-2026-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -80,7 +88,6 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
     setIssuedPolicyData(newPolicy);
     setIsCompleted(true);
 
-    // Trigger celebratory confetti
     try {
       confetti({
         particleCount: 80,
@@ -94,6 +101,43 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
     if (onPolicyIssued) {
       onPolicyIssued(newPolicy);
     }
+  };
+
+  const handleBuyPlan = (plan: PlanTier) => {
+    setSelectedPlan(plan);
+    // Check if user has completed KYC
+    if (currentUser?.kycStatus === 'verified') {
+      executePolicyIssuance(plan);
+    } else {
+      // Prompt Mandatory IRDAI KYC Verification Step 6
+      setStep(6);
+    }
+  };
+
+  const handleVerifyKycAndIssue = () => {
+    setKycVerifying(true);
+    setTimeout(() => {
+      setKycVerifying(false);
+      if (onKycVerified) {
+        onKycVerified({
+          panNumber: wizardPan.toUpperCase(),
+          panName: (currentUser?.name || 'Rohan Sharma').toUpperCase(),
+          aadhaarNumber: 'XXXX XXXX 8912',
+          aadhaarVerified: true,
+          ckycNumber: `CKYC-2026-${Math.floor(1000000 + Math.random() * 9000000)}`,
+          documentType: 'aadhaar',
+          documentNumber: '8912',
+          documentFileName: 'DigiLocker_Verified.xml',
+          ocrMatchScore: 99.7,
+          livenessVerified: true,
+          verifiedAt: 'Just Now',
+          address: 'Flat 402, Green Glen Layout, Bellandur, Bengaluru 560103',
+        });
+      }
+      if (selectedPlan) {
+        executePolicyIssuance(selectedPlan);
+      }
+    }, 1000);
   };
 
   const toggleBeneficiary = (item: string) => {
@@ -385,6 +429,88 @@ export const PolicyFinderWizard: React.FC<PolicyFinderWizardProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6: MANDATORY IRDAI DIGITAL KYC */}
+          {step === 6 && !isCompleted && selectedPlan && (
+            <div className="space-y-5 animate-in fade-in">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-900 to-navy-900 text-white flex items-start justify-between">
+                <div>
+                  <div className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">
+                    IRDAI Central Compliance
+                  </div>
+                  <h4 className="text-base font-bold font-display mt-0.5">
+                    Mandatory Digital e-KYC Verification
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Government regulations require instant PAN and Aadhaar authentication before issuing {selectedPlan.name}.
+                  </p>
+                </div>
+                <span className="text-[10px] bg-teal-500/20 text-teal-300 border border-teal-500/40 px-2 py-1 rounded-full font-bold">
+                  DigiLocker FastTrack
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-navy-900 uppercase tracking-wider mb-1.5">
+                      10-Digit PAN Card
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={wizardPan}
+                      onChange={(e) => setWizardPan(e.target.value.toUpperCase())}
+                      placeholder="ABCPS1234F"
+                      className="w-full text-sm font-mono uppercase bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-navy-900 font-bold focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-navy-900 uppercase tracking-wider mb-1.5">
+                      12-Digit Aadhaar (Masked)
+                    </label>
+                    <input
+                      type="text"
+                      value={wizardAadhaar}
+                      onChange={(e) => setWizardAadhaar(e.target.value)}
+                      placeholder="XXXX XXXX 8912"
+                      className="w-full text-sm font-mono bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-navy-900 font-bold focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center space-x-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-bold">Paperless DigiLocker Consent:</span>
+                    <p className="text-[11px] text-emerald-700">
+                      I authorize CoverFlow to fetch my verified e-KYC profile from UIDAI/NSDL to issue policy documents immediately.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleVerifyKycAndIssue}
+                  disabled={kycVerifying}
+                  className="w-full py-3.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md shadow-teal-600/20 transition-all"
+                >
+                  {kycVerifying ? (
+                    <>
+                      <Sparkles className="w-4 h-4 animate-spin" />
+                      <span>Authenticating with CKYC Registry & Issuing Policy...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Verify e-KYC & Issue Policy Certificate</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}

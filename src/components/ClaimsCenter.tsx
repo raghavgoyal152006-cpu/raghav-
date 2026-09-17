@@ -19,6 +19,7 @@ import { ClaimRecord } from '../types/insurance';
 
 export const ClaimsCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'track' | 'file'>('track');
+  const [claims, setClaims] = useState<ClaimRecord[]>(MOCK_CLAIMS);
   const [selectedClaimId, setSelectedClaimId] = useState<string>('CLM-2026-0041');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
@@ -30,7 +31,14 @@ export const ClaimsCenter: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>(['Hospital_Bill_Receipt.pdf']);
   const [claimSubmitted, setClaimSubmitted] = useState<boolean>(false);
 
-  const currentClaim = MOCK_CLAIMS.find((c) => c.id === selectedClaimId) || MOCK_CLAIMS[0];
+  const filteredClaims = claims.filter(
+    (c) =>
+      c.claimNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.policyNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.incidentType.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const currentClaim = claims.find((c) => c.id === selectedClaimId) || claims[0];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -41,6 +49,33 @@ export const ClaimsCenter: React.FC = () => {
 
   const handleFileClaimSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newClaimId = `CLM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newRecord: ClaimRecord = {
+      id: newClaimId,
+      claimNumber: `CF-CLM-${Math.floor(10000 + Math.random() * 90000)}`,
+      policyNumber: filePolicyNumber,
+      policyType: 'health',
+      insurer: 'CareNova Assurance',
+      claimantName: 'Rohan Sharma',
+      incidentType: incidentType,
+      incidentDate: incidentDate,
+      claimAmount: `₹${Number(claimAmount).toLocaleString()}`,
+      approvedAmount: `₹${Math.round(Number(claimAmount) * 0.95).toLocaleString()}`,
+      status: 'under_assessment',
+      currentStep: 3,
+      lastUpdated: 'Just Now',
+      documents: uploadedFiles.map((name) => ({ name, size: '1.2 MB', status: 'verified' })),
+      timeline: [
+        { step: 'Claim Registered', timestamp: 'Today, 09:30 AM', note: 'Intimation logged via mobile portal.', completed: true },
+        { step: 'Documents Received', timestamp: 'Today, 10:15 AM', note: `${uploadedFiles.length} bills uploaded & OCR scanned.`, completed: true },
+        { step: 'Under Medical Audit', timestamp: 'Today, 11:00 AM', note: 'Doctor verifying diagnosis at hospital desk.', completed: true },
+        { step: 'Final Approval', timestamp: 'Estimated in 2 Hours', note: 'Cashless pre-authorization voucher ready.', completed: false },
+        { step: 'Settlement Disbursed', timestamp: 'Pending', note: 'Direct payment to hospital account.', completed: false },
+      ],
+    };
+
+    setClaims([newRecord, ...claims]);
+    setSelectedClaimId(newClaimId);
     setClaimSubmitted(true);
   };
 
@@ -114,9 +149,9 @@ export const ClaimsCenter: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Demo Active Claims
+                  Demo Active Claims ({filteredClaims.length})
                 </div>
-                {MOCK_CLAIMS.map((claim) => {
+                {filteredClaims.map((claim) => {
                   const isSelected = selectedClaimId === claim.id;
                   return (
                     <div

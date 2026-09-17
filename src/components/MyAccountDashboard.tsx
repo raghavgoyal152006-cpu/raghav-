@@ -18,18 +18,28 @@ import {
   Receipt
 } from 'lucide-react';
 import { MOCK_USER_POLICIES, MOCK_CLAIMS } from '../data/mockData';
-import { Policy } from '../types/insurance';
+import { Policy, UserProfile } from '../types/insurance';
 
 interface MyAccountDashboardProps {
   onViewCertificate: (policy: Policy) => void;
+  currentUser?: UserProfile | null;
+  onOpenKyc?: () => void;
 }
 
 export const MyAccountDashboard: React.FC<MyAccountDashboardProps> = ({
-  onViewCertificate
+  onViewCertificate,
+  currentUser,
+  onOpenKyc,
 }) => {
   const [activeTab, setActiveTab] = useState<'policies' | 'claims' | 'renewals' | 'documents'>('policies');
   const [policies, setPolicies] = useState<Policy[]>(MOCK_USER_POLICIES);
   const [renewedId, setRenewedId] = useState<string | null>(null);
+
+  const userName = currentUser?.name || 'Rohan Sharma';
+  const userInitials = currentUser?.avatarInitials || 'RS';
+  const userId = currentUser?.id || 'CF-USR-99824';
+  const userMobile = currentUser?.mobile || '+91 98765 ****0';
+  const isKycVerified = currentUser?.kycStatus === 'verified';
 
   const handleQuickRenew = (policyId: string) => {
     setPolicies(policies.map((p) => {
@@ -50,32 +60,77 @@ export const MyAccountDashboard: React.FC<MyAccountDashboardProps> = ({
         <div className="bg-gradient-to-r from-navy-900 via-slate-900 to-teal-950 rounded-3xl p-6 sm:p-8 text-white shadow-floating mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-navy-950 font-black text-2xl flex items-center justify-center shadow-md">
-              RS
+              {userInitials}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-2xl font-bold font-display">Rohan Sharma</h2>
-                <span className="text-[10px] bg-teal-500/30 text-teal-300 border border-teal-500/40 px-2 py-0.5 rounded-full font-bold">
-                  Verified Insured Member
+                <h2 className="text-2xl font-bold font-display">{userName}</h2>
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${
+                  isKycVerified
+                    ? 'bg-teal-500/30 text-teal-300 border-teal-500/40'
+                    : 'bg-amber-500/30 text-amber-300 border-amber-500/40'
+                }`}>
+                  {isKycVerified ? 'Verified Insured Member' : 'KYC Pending Action'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                Customer ID: <strong className="text-white">CF-USR-99824</strong> • Primary Mobile: +91 98765 ****0
+                Customer ID: <strong className="text-white">{userId}</strong> • Primary Mobile: {userMobile}
               </p>
             </div>
           </div>
 
-          {/* KYC Status Badge */}
+          {/* KYC Status Badge & Action */}
           <div className="flex items-center space-x-4 bg-white/5 border border-white/10 p-3 rounded-2xl">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <UserCheck className="w-5 h-5" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              isKycVerified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+            }`}>
+              {isKycVerified ? <UserCheck className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
             </div>
             <div className="text-xs">
-              <div className="font-bold text-slate-200">KYC Status: Verified (Aadhaar/PAN)</div>
-              <div className="text-[10px] text-slate-400">IRDAI Central Repository Synced</div>
+              <div className="font-bold text-slate-200">
+                KYC Status: {isKycVerified ? 'Verified (Aadhaar & PAN)' : 'Verification Incomplete'}
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {isKycVerified ? 'IRDAI Central Registry (CKYC) Synced' : 'Required for instant claim approvals'}
+              </div>
             </div>
+            {onOpenKyc && (
+              <button
+                onClick={onOpenKyc}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                  isKycVerified
+                    ? 'bg-white/10 hover:bg-white/20 text-white'
+                    : 'bg-amber-500 hover:bg-amber-400 text-navy-950 animate-pulse'
+                }`}
+              >
+                {isKycVerified ? 'View CKYC' : 'Verify Now'}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* KYC Pending Reminder Banner if not verified */}
+        {!isKycVerified && (
+          <div className="mb-8 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <strong className="text-amber-900 font-bold">Action Required: Complete Your Digital e-KYC</strong>
+                <p className="text-amber-800 text-[11px] mt-0.5">
+                  Link your Aadhaar & PAN in 2 minutes to unlock 100% cashless hospital admissions and instant digital claims.
+                </p>
+              </div>
+            </div>
+            {onOpenKyc && (
+              <button
+                onClick={onOpenKyc}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold whitespace-nowrap shadow-sm"
+              >
+                Start Digital KYC
+              </button>
+            )}
+          </div>
+        )}
 
         {/* 4 TOP DASHBOARD METRIC CARDS (Exact Match to Prompt Specs) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

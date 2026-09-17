@@ -1,5 +1,43 @@
 export type UserRole = 'customer' | 'advisor' | 'business' | 'admin';
 
+export type KycStatus = 'pending' | 'in_progress' | 'verified' | 'rejected';
+
+export interface KycData {
+  panNumber: string;
+  panName: string;
+  aadhaarNumber: string;
+  aadhaarVerified: boolean;
+  ckycNumber?: string;
+  documentType: 'aadhaar' | 'passport' | 'voter_id' | 'driving_license';
+  documentNumber: string;
+  documentFileName?: string;
+  ocrMatchScore?: number;
+  livenessVerified: boolean;
+  verifiedAt?: string;
+  address?: string;
+}
+
+export interface UserNotification {
+  id: string;
+  title: string;
+  desc: string;
+  time: string;
+  read: boolean;
+  type: 'claim' | 'renewal' | 'kyc' | 'system';
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: UserRole;
+  avatarInitials: string;
+  kycStatus: KycStatus;
+  kycData: KycData;
+  unreadNotifications: UserNotification[];
+}
+
 export type ProductType = 'health' | 'auto' | 'life' | 'home' | 'travel' | 'business' | 'device';
 
 export interface PlanTier {
